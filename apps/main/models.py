@@ -7,6 +7,7 @@ from django.db import models
 
 # First party
 from abstracts.models import AbsctractDateTime
+from abstracts.utils import normalize_time
 
 
 class Country(models.Model):
@@ -188,17 +189,26 @@ class Song(models.Model):
         to=Genre,
         verbose_name='жанр'
     )
+    # TODO: отправлять email при достижении
+    #       100 прослушиваний
+    #       1000 прослушиваний итд.
+    #
     times_played = models.PositiveIntegerField(
         verbose_name='количество прослушиваний',
         null=True,
         blank=True
     )
 
+    @property
+    def normalized_duration(self) -> str:
+        return normalize_time(
+            self.duration
+        )
+
     def __str__(self) -> str:
         return f'Song: {self.title}'
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-
         # TODO: сделать валидацию на аудио-файл
         super().save(*args, **kwargs)
 

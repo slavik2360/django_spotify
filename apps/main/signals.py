@@ -12,6 +12,7 @@ from django.db.models.signals import (
 from django.dispatch import receiver
 
 # First party
+from abstracts.utils import send_email
 from main.models import Song
 
 
@@ -28,24 +29,30 @@ def post_save_song(
     """Signal post-save Song."""
 
     if created:
-        # TODO: отправлять письмо юзеру
-        #       при добавлении песни
-        #
-        #       Вы успешно загрузили песню на наш сайт !
-        #       ID вашей песни: {song.id}
-        #
         mfile: mutagen.File = mutagen.File(
             instance.audio_file
         )
         instance.duration = mfile.info.length
         instance.save()
 
+        to_emails: list[str] = [
+            'nafobe6448@gienig.com'
+        ]
+        send_email(
+            f'Вы загрузили песню {instance.title}',
+            (
+                f'ID песни: {instance.id} | '
+                f'Длительность: {instance.normalized_duration}'
+            ),
+            to_emails
+        )
+
 
 @receiver(
     pre_save,
     sender=Song
 )
-def pre_save_anime(
+def pre_save_song(
     sender: ModelBase,
     instance: Song,
     **kwargs: dict
