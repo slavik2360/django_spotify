@@ -198,6 +198,10 @@ class Song(models.Model):
         null=True,
         blank=True
     )
+    is_favorite = models.BooleanField(
+        verbose_name='избранное',
+        default=False
+    )
 
     @property
     def normalized_duration(self) -> str:
