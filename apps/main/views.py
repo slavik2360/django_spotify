@@ -31,10 +31,9 @@ class IndexView(View):
     template_name = 'main/index.html'
 
     def get_context_data(self, **kwargs: Any) -> dict[str, QuerySet[Any]]:
+
         albums: QuerySet[Album] = Album.objects.all()
-        context: dict[str, QuerySet[Any]] = {
-            'albums': albums
-        }
+        context: dict[str, QuerySet[Any]] = {'albums': albums}
         return context
 
     def get(
@@ -43,6 +42,7 @@ class IndexView(View):
         *args: Any,
         **kwargs: Any
     ) -> HttpResponse:
+
         context: dict[str, QuerySet[Any]] = self.get_context_data()
         return render(
             request,
@@ -57,12 +57,10 @@ class DetailView(View):
     def get_context_data(
         self,
         album_id: int,
-        **kwargs: Any
+        **kwargs: dict
     ) -> dict[str, QuerySet[Any]]:
-        album: Album = get_object_or_404(
-            Album,
-            album_id
-        )
+
+        album: Album = get_object_or_404(Album, album_id)
         user: User = self.request.user
         context: dict[str, Any] = {
             'album': album,
@@ -77,9 +75,10 @@ class DetailView(View):
         *args: Any,
         **kwargs: Any
     ) -> HttpResponse:
-        context: dict[str, QuerySet[Any]] = self.get_context_data(
-            album_id
-        )
+
+        context: dict[str, QuerySet[Any]] = \
+            self.get_context_data(album_id)
+
         return render(
             request,
             self.template_name,
@@ -95,13 +94,9 @@ class DeleteView(View):
         album_id: int,
         **kwargs: Any
     ) -> dict[str, QuerySet[Any]]:
-        album: Album = get_object_or_404(
-            Album,
-            album_id
-        )
-        context: dict[str, QuerySet[Any]] = {
-            'album': album
-        }
+
+        album: Album = get_object_or_404(Album, album_id)
+        context: dict[str, QuerySet[Any]] = {'album': album}
         return context
 
     def post(
@@ -112,12 +107,11 @@ class DeleteView(View):
         *args: Any,
         **kwargs: Any
     ) -> HttpResponse:
-        context: dict[str, QuerySet[Any]] = self.get_context_data(
-            album_id
-        )
-        song: Song = context['album'].songs.get(
-            id=song_id
-        )
+
+        context: dict[str, QuerySet[Any]] = \
+            self.get_context_data(album_id)
+
+        song: Song = context['album'].songs.get(id=song_id)
         song.delete()
 
         return render(
@@ -131,16 +125,15 @@ class CreateSongView(View):
     """
     Вьюшка для создания песен.
     """
+    template_name = 'main/create_song.html'
+
     def get(
         self,
         request: WSGIRequest,
         album_id: int
     ) -> HttpResponse:
 
-        album: Album = get_object_or_404(
-            Album,
-            album_id
-        )
+        album: Album = get_object_or_404(Album, album_id)
         form: SongForm = SongForm()
         context: dict[str, Any] = {
             'album': album,
@@ -148,7 +141,7 @@ class CreateSongView(View):
         }
         return render(
             request,
-            'main/create_song.html',
+            self.template_name,
             context
         )
 
@@ -158,10 +151,7 @@ class CreateSongView(View):
         album_id: int
     ) -> HttpResponse:
 
-        album: Album = get_object_or_404(
-            Album,
-            album_id
-        )
+        album: Album = get_object_or_404(Album, album_id)
         form: SongForm = SongForm(
             request.POST or None,
             request.FILES or None
@@ -169,25 +159,25 @@ class CreateSongView(View):
         if not form.is_valid():
             return render(
                 request,
-                'main/create_song.html',
+                self.template_name,
                 {
                     'album': album,
                     'form': form
                 }
             )
+        album_songs: QuerySet[str] = \
+            album.songs.values_list('title', flat=True)
 
-        album_songs: QuerySet[Song] = album.songs.all()
-        for song in album_songs:
-            if song.title == form.cleaned_data.get('title'):
-                return render(
-                    request,
-                    'main/create_song.html',
-                    {
-                        'album': album,
-                        'form': form,
-                        'error_message': 'Вы уже добавляли эту песню'
-                    }
-                )
+        if form.cleaned_data.get('title') in album_songs:
+            return render(
+                request,
+                self.template_name,
+                {
+                    'album': album,
+                    'form': form,
+                    'error_message': 'Вы уже добавляли эту песню'
+                }
+            )
 
         song: SongForm = form.save(commit=False)
         song.album = album
@@ -197,15 +187,12 @@ class CreateSongView(View):
         file_type = file_type.lower()
 
         audio_file_types: QuerySet[str] = \
-            AudioFileType.objects.values_list(
-                'name',
-                flat=True
-            )
+            AudioFileType.objects.values_list('name', flat=True)
 
         if file_type not in audio_file_types:
             return render(
                 request,
-                'main/create_song.html',
+                self.template_name,
                 {
                     'album': album,
                     'form': form,
@@ -217,9 +204,8 @@ class CreateSongView(View):
         return render(
             request,
             'main/detail.html',
-            {
-                'album': album}
-            )
+            {'album': album}
+        )
 
 
 class FavoriteView(View):
