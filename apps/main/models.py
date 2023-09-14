@@ -53,7 +53,8 @@ class Band(AbsctractDateTime):
     country = models.ForeignKey(
         to=Country,
         on_delete=models.PROTECT,
-        verbose_name='страна'
+        verbose_name='страна',
+        related_name='to_contry'
     )
 
     class Meta:
@@ -83,6 +84,7 @@ class Artist(AbsctractDateTime):
         to=Band,
         on_delete=models.PROTECT,
         verbose_name='группа',
+        related_name='to_band',
         null=True,
         blank=True
     )
@@ -133,7 +135,8 @@ class Album(models.Model):
     band = models.ForeignKey(
         to=Band,
         on_delete=models.PROTECT,
-        verbose_name='группа'
+        verbose_name='группа',
+        related_name='to_band'
     )
     title = models.CharField(
         verbose_name='название альбома',
